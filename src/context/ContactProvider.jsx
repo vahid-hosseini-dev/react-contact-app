@@ -3,6 +3,7 @@ import ContactContext from "./ContactContext";
 import validateContact from "../constants/validateContact";
 import { useReducer } from "react";
 import { initialState, contactReducer } from "./contactReducer";
+import { deleteContact, getContacts, updateContact } from "../services/api";
 
 function ContactProvider({ children }) {
   const [state, dispatch] = useReducer(contactReducer, initialState);
@@ -33,8 +34,12 @@ function ContactProvider({ children }) {
   };
 
   const deleteHandler = (id) => {
-    const newContacts = state.contacts.filter((contact) => contact.id !== id);
-    dispatch({ type: "SET_CONTACTS", payload: newContacts });
+    deleteContact(id).then(() => {
+      getContacts().then((res) => {
+        dispatch({ type: "SET_CONTACTS", payload: res.data });
+      });
+    });
+
     showToast("Contact deleted!", "error");
   };
 
@@ -63,19 +68,22 @@ function ContactProvider({ children }) {
       return;
     }
 
-    const updatedContacts = state.contacts.map((item) =>
-      item.id === state.edit ? { ...state.contact, id: state.edit } : item
-    );
+    const updatedContact = { ...state.contact, id: state.edit };
 
-    dispatch({ type: "SET_CONTACTS", payload: updatedContacts });
-    dispatch({ type: "CLEAR_CONTACT" });
-    dispatch({ type: "EDIT", paylod: null });
-    setAlert("");
-    showToast("Contact updated successfully!", "success");
+    updateContact(state.edit, updatedContact)
+      .then(() => getContacts())
+      .then((res) => {
+        dispatch({ type: "SET_CONTACTS", payload: res.data });
+        dispatch({ type: "CLEAR_CONTACT" });
+        dispatch({ type: "EDIT", payload: null });
+        setAlert("");
+        showToast("Contact updated successfully!", "success");
+      });
   };
 
   const deleteSelectedHandler = () => {
     const newContacts = state.contacts.filter((contact) => !contact.checked);
+    deleteContact();
     dispatch({ type: "SET_CONTACTS", payload: newContacts });
     showToast("Selected contacts deleted!", "error");
   };

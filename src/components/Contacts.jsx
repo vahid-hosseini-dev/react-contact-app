@@ -10,7 +10,9 @@ import inputs from "../constants/inputs";
 import validateContact from "../constants/validateContact";
 
 import ContactContext from "../context/ContactContext";
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
+
+import { getContacts, addContact } from "../services/api";
 
 function Contacts() {
   const {
@@ -29,11 +31,17 @@ function Contacts() {
     setAlert,
   } = useContext(ContactContext);
 
+  useEffect(() => {
+    getContacts().then((res) => {
+      dispatch({ type: "SET_CONTACTS", payload: res.data });
+    });
+  }, []);
+
   const filteredContacts = contacts.filter(
     (contact) =>
-      contact.name.includes(search) ||
-      contact.lastName.includes(search) ||
-      contact.email.includes(search)
+      (contact.name || "").includes(search) ||
+      (contact.lastName || "").includes(search) ||
+      (contact.email || "").includes(search)
   );
 
   const changeHandler = (event) => {
@@ -77,11 +85,14 @@ function Contacts() {
 
     setAlert("");
     const newContact = { ...contact, id: v4(), checked: false };
-    dispatch({
-      type: "SET_CONTACTS",
-      payload: [...contacts, newContact],
+
+    addContact(newContact).then((res) => {
+      dispatch({
+        type: "SET_CONTACTS",
+        payload: [...contacts, res.data],
+      });
+      dispatch({ type: "CLEAR_CONTACT" });
     });
-    dispatch({ type: "CLEAR_CONTACT" });
   };
 
   return (
