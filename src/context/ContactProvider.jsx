@@ -37,6 +37,7 @@ function ContactProvider({ children }) {
     deleteContact(id).then(() => {
       getContacts().then((res) => {
         dispatch({ type: "SET_CONTACTS", payload: res.data });
+        localStorage.setItem("contacts", JSON.stringify(res.data));
       });
     });
 
@@ -70,10 +71,13 @@ function ContactProvider({ children }) {
 
     const updatedContact = { ...state.contact, id: state.edit };
 
+    localStorage.setItem("contacts", JSON.stringify(updatedContact));
+
     updateContact(state.edit, updatedContact)
       .then(() => getContacts())
       .then((res) => {
         dispatch({ type: "SET_CONTACTS", payload: res.data });
+        localStorage.setItem("contacts", JSON.stringify(res.data));
         dispatch({ type: "CLEAR_CONTACT" });
         dispatch({ type: "EDIT", payload: null });
         setAlert("");

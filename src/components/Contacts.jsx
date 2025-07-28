@@ -32,9 +32,16 @@ function Contacts() {
   } = useContext(ContactContext);
 
   useEffect(() => {
-    getContacts().then((res) => {
-      dispatch({ type: "SET_CONTACTS", payload: res.data });
-    });
+    const localData = localStorage.getItem("contacts");
+    if (localData) {
+      const contacts = JSON.parse(localData);
+      dispatch({ type: "SET_CONTACTS", payload: contacts });
+    } else {
+      getContacts().then((res) => {
+        dispatch({ type: "SET_CONTACTS", payload: res.data });
+        localStorage.setItem("contacts", JSON.stringify(res.data));
+      });
+    }
   }, []);
 
   const filteredContacts = contacts.filter(
@@ -91,6 +98,9 @@ function Contacts() {
         type: "SET_CONTACTS",
         payload: [...contacts, res.data],
       });
+
+      localStorage.setItem("contacts", JSON.stringify([...contacts, res.data]));
+
       dispatch({ type: "CLEAR_CONTACT" });
     });
   };
